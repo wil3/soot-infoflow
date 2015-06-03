@@ -585,6 +585,9 @@ public class Infoflow extends AbstractInfoflow {
 		else for (Entry<ResultSinkInfo, Set<ResultSourceInfo>> entry : results.getResults().entrySet()) {
 			logger.info("The sink {} in method {} was called with values from the following sources:",
                     entry.getKey(), iCfg.getMethodOf(entry.getKey().getSink()).getSignature() );
+			
+			SootClass declaringClass = iCfg.getMethodOf(entry.getKey().getSink()).getDeclaringClass();
+			entry.getKey().setDeclaringClass(declaringClass);
 			for (ResultSourceInfo source : entry.getValue()) {
 				logger.info("- {} in method {}",source, iCfg.getMethodOf(source.getSource()).getSignature());
 				if (source.getPath() != null && !source.getPath().isEmpty()) {

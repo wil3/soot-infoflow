@@ -19,6 +19,16 @@ import soot.Type;
  * data container which stores the string representation of a SootMethod and its corresponding class
  */
 public class SootMethodAndClass {
+	
+	/**
+	 * The class the method is called in
+	 */
+	private String declaredClass;
+	/**
+	 * The linenumber in the class the method is used
+	 */
+	private int lineNumber;
+	
 	private final String methodName;
 	private final String className;
 	private final String returnType;
@@ -37,6 +47,8 @@ public class SootMethodAndClass {
 	}
 	
 	public SootMethodAndClass(SootMethod sm) {
+		//this.lineNumber = sm.getJavaSourceStartLineNumber();
+		//this.declaredClass = sm.getDeclaringClass().getName();
 		this.methodName = sm.getName();
 		this.className = sm.getDeclaringClass().getName();
 		this.returnType = sm.getReturnType().toString();
@@ -80,7 +92,8 @@ public class SootMethodAndClass {
 	}
 
 	public String getSignature() {
-		String s = "<" + this.className + ": " + (this.returnType.length() == 0 ? "" : this.returnType + " ")
+		String inClass = (declaredClass == null) ? "" : declaredClass + ":" + lineNumber + " ";
+		String s = inClass + "<" + this.className + ": " + (this.returnType.length() == 0 ? "" : this.returnType + " ")
 				+ this.methodName + "(";
 		for (int i = 0; i < this.parameters.size(); i++) {
 			if (i > 0)
@@ -133,6 +146,23 @@ public class SootMethodAndClass {
 		}
 		sb.append(")>");
 		return sb.toString();
+	}
+	
+
+	public String getDeclaredClass() {
+		return declaredClass;
+	}
+
+	public void setDeclaredClass(String declaredClass) {
+		this.declaredClass = declaredClass;
+	}
+
+	public int getLineNumber() {
+		return lineNumber;
+	}
+
+	public void setLineNumber(int lineNumber) {
+		this.lineNumber = lineNumber;
 	}
 
 }
