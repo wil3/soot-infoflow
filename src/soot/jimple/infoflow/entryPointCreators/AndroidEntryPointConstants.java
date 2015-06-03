@@ -14,7 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Class containing constants for the well-known Android lifecycle methods
+ * Class containing constants for the well-known Android lifecycle methods.
+ * For multiple parameters, do not include a space between them.
  */
 public class AndroidEntryPointConstants {
 	
@@ -26,6 +27,8 @@ public class AndroidEntryPointConstants {
 	public static final String BROADCASTRECEIVERCLASS = "android.content.BroadcastReceiver";
 	public static final String CONTENTPROVIDERCLASS = "android.content.ContentProvider";
 	public static final String APPLICATIONCLASS = "android.app.Application";
+	public static final String FRAGMENTCLASS = "android.app.Fragment";
+	public static final String V4FRAGMENTCLASS = "android.support.v4.app.Fragment";
 	
 	public static final String ACTIVITY_ONCREATE = "void onCreate(android.os.Bundle)";
 	public static final String ACTIVITY_ONSTART = "void onStart()";
@@ -40,6 +43,20 @@ public class AndroidEntryPointConstants {
 	public static final String ACTIVITY_ONRESTART = "void onRestart()";
 	public static final String ACTIVITY_ONDESTROY = "void onDestroy()";
 	
+	public static final String FRAGMENT_ONATTACH = "void onAttach(android.app.Activity)";
+	public static final String FRAGMENT_ONCREATE = "void onCreate(android.os.Bundle)";
+	public static final String FRAGMENT_ONCREATEVIEW = "android.view.View onCreateView(android.view.LayoutInflater,android.view.ViewGroup,android.os.Bundle)";
+	public static final String FRAGMENT_ONVIEWCREATED = "void onViewCreated(android.view.View,android.os.Bundle)";
+	public static final String FRAGMENT_ONACTIVITYCREATED = "void onActivityCreated(android.os.Bundle)";
+	public static final String FRAGMENT_ONVIEWSTATERESTORED = "void onViewStateRestored(android.os.Bundle)";
+	public static final String FRAGMENT_ONSTART = "void onStart()";
+	public static final String FRAGMENT_ONRESUME = "void onResume()";
+	public static final String FRAGMENT_ONPAUSE = "void onPause()";
+	public static final String FRAGMENT_ONSTOP = "void onStop()";
+	public static final String FRAGMENT_ONDESTROYVIEW = "void onDestroyView()";
+	public static final String FRAGMENT_ONDESTROY = "void onDestroy()";
+	public static final String FRAGMENT_ONDETACH = "void onDetach()";
+
 	public static final String SERVICE_ONCREATE = "void onCreate()";
 	public static final String SERVICE_ONSTART1 = "void onStart(android.content.Intent,int)";
 	public static final String SERVICE_ONSTART2 = "int onStartCommand(android.content.Intent,int,int)";
@@ -85,6 +102,22 @@ public class AndroidEntryPointConstants {
 		ACTIVITY_ONPOSTCREATE,
 		ACTIVITY_ONPOSTRESUME};
 	
+	private static final String[] fragmentMethods = {
+		FRAGMENT_ONATTACH,
+		FRAGMENT_ONCREATE,
+		FRAGMENT_ONCREATEVIEW,
+		FRAGMENT_ONVIEWCREATED,
+		FRAGMENT_ONACTIVITYCREATED,
+		FRAGMENT_ONVIEWSTATERESTORED,
+		FRAGMENT_ONSTART,
+		FRAGMENT_ONRESUME,
+		FRAGMENT_ONPAUSE,
+		FRAGMENT_ONSTOP,
+		FRAGMENT_ONDESTROYVIEW,
+		FRAGMENT_ONDESTROY,
+		FRAGMENT_ONDETACH
+	};
+	
 	private static final String[] serviceMethods = {SERVICE_ONCREATE,
 		SERVICE_ONDESTROY,
 		SERVICE_ONSTART1,
@@ -118,6 +151,10 @@ public class AndroidEntryPointConstants {
 	
 	public static List<String> getActivityLifecycleMethods(){
 		return Arrays.asList(activityMethods);
+	}
+	
+	public static List<String> getFragmentLifecycleMethods(){
+		return Arrays.asList(fragmentMethods);
 	}
 	
 	public static List<String> getServiceLifecycleMethods(){
@@ -154,7 +191,9 @@ public class AndroidEntryPointConstants {
 				|| className.equals(SERVICECLASS)
 				|| className.equals(BROADCASTRECEIVERCLASS)
 				|| className.equals(CONTENTPROVIDERCLASS)
-				|| className.equals(APPLICATIONCLASS);
+				|| className.equals(APPLICATIONCLASS)
+				|| className.equals(FRAGMENTCLASS)
+				|| className.equals(V4FRAGMENTCLASS);
 	}
 
 }

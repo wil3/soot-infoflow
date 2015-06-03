@@ -85,6 +85,7 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 	private enum ComponentType {
 		Application,
 		Activity,
+		Fragment,
 		Service,
 		BroadcastReceiver,
 		ContentProvider,
@@ -146,6 +147,7 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 	@Override
 	protected SootMethod createDummyMainInternal(SootMethod emptySootMethod)
 	{
+
 		Map<String, Set<String>> classMap = SootMethodRepresentationParser.v().parseClassNames
 				(additionalEntryPoints, false);
 		for (String androidClass : this.androidClasses)
@@ -276,7 +278,9 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 				boolean instanceNeeded = componentType == ComponentType.Activity
 						|| componentType == ComponentType.Service
 						|| componentType == ComponentType.BroadcastReceiver
-						|| componentType == ComponentType.ContentProvider;
+						|| componentType == ComponentType.ContentProvider
+						|| componentType == ComponentType.Fragment;
+				
 				Map<String, SootMethod> plainMethods = new HashMap<String, SootMethod>();
 				if (!instanceNeeded)
 					for(String method : entry.getValue()){
@@ -334,6 +338,9 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 					generateContentProviderLifecycle(entry.getValue(), currentClass, endClassStmt,
 							classLocal);
 					break;
+				case Fragment:
+					generateFragmentLifecycle(entry.getValue(), currentClass, endClassStmt,
+							classLocal);
 				case Plain:
 					// Allow the complete class to be skipped
 					createIfStmt(endClassStmt);
@@ -389,8 +396,8 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 		
 		if (DEBUG || Options.v().validate())
 			mainMethod.getActiveBody().validate();
-		
-		logger.info("Generated main method:\n{}", body);
+		//logger.info("For class {} ", );
+		logger.debug("Generated main method:\n{}", body);
 		return mainMethod;
 	}
 	
@@ -457,6 +464,10 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 				ctype = ComponentType.BroadcastReceiver;
 			else if(sc.getName().equals(AndroidEntryPointConstants.CONTENTPROVIDERCLASS))
 				ctype = ComponentType.ContentProvider;
+			else if (sc.getName().equals(AndroidEntryPointConstants.V4FRAGMENTCLASS))
+				ctype = ComponentType.Fragment;
+			else if (sc.getName().equals(AndroidEntryPointConstants.FRAGMENTCLASS))
+				ctype = ComponentType.Fragment;
 			else
 				continue;
 			
@@ -684,6 +695,153 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 		return false;
 	}
 
+	/**
+	 * Generates the lifecycle for a Fragment
+	 * @param entryPoints The list of methods to consider in this class
+	 * @param currentClass The class for which to build the fragment lifecycle
+	 * @param endClassStmt The statement to which to jump after completing
+	 * the lifecycle
+	 * @param classLocal The local referencing an instance of the current class
+	 */
+	private void generateFragmentLifecycle(Set<String> entryPoints,
+			SootClass currentClass,
+			JNopStmt endClassStmt,
+			Local classLocal){
+		
+		// As we don't know the order in which the different Android lifecycles
+		// run, we allow for each single one of them to be skipped
+		createIfStmt(endClassStmt);
+		
+		//onattach
+		Stmt onAttachNop = new JNopStmt();
+		body.getUnits().add(onAttachNop);
+		Stmt onAttach = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONATTACH, currentClass, entryPoints, classLocal);
+		//if (onAttach != null){
+		//	createIfStmt(onAttach);
+		//}
+		
+		//oncreate
+		Stmt onCreateNop = new JNopStmt();
+		body.getUnits().add(onCreateNop);
+		Stmt onCreate = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONCREATE, currentClass, entryPoints, classLocal);
+		//if (onCreate != null){
+		//	createIfStmt(onCreate);
+		//}
+		
+		//oncreateview
+		Stmt onCreateViewNop = new JNopStmt();
+		body.getUnits().add(onCreateViewNop);
+		Stmt onCreateView = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONCREATEVIEW, currentClass, entryPoints, classLocal);
+		//if (onCreateView != null){
+		//	createIfStmt(onCreateView);
+		//}
+		
+		//onviewcreated 
+		Stmt onViewCreatedNop = new JNopStmt();
+		body.getUnits().add(onViewCreatedNop);
+		Stmt onViewCreated = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONVIEWCREATED, currentClass, entryPoints, classLocal);
+		//if (onViewCreated != null){
+		//	createIfStmt(onViewCreated);
+		//}
+		
+		//onactivitycreated
+		Stmt onActivityCreatedNop = new JNopStmt();
+		body.getUnits().add(onActivityCreatedNop);
+		Stmt onActivityCreated = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONACTIVITYCREATED, currentClass, entryPoints, classLocal);
+		//if (onActivityCreated != null){
+		//	createIfStmt(onActivityCreated);
+		//}
+		
+		//onviewstaterestored
+		Stmt onViewStateRestoredNop = new JNopStmt();
+		body.getUnits().add(onViewStateRestoredNop);
+		Stmt onViewStateRestored = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONVIEWSTATERESTORED, currentClass, entryPoints, classLocal);
+		//if (onViewStateRestored != null){
+		//	createIfStmt(onViewStateRestored);
+		//}
+		
+		//onstart
+		Stmt onStartNop = new JNopStmt();
+		body.getUnits().add(onStartNop);
+		Stmt onStart = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONSTART, currentClass, entryPoints, classLocal);
+		//if (onStart != null){
+		//	createIfStmt(onStart);
+		//}
+		
+		//onresume
+		Stmt onResumeNop = new JNopStmt();
+		body.getUnits().add(onResumeNop);
+		Stmt onResume = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONRESUME, currentClass, entryPoints, classLocal);
+		//if (onResume != null){
+		//	createIfStmt(onResume);
+		//}
+		
+		//onpause
+		Stmt onPauseNop = new JNopStmt();
+		body.getUnits().add(onPauseNop);
+		Stmt onPause = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONPAUSE, currentClass, entryPoints, classLocal);
+		//if (onPause != null){
+		//	createIfStmt(onPause);
+		//}
+		
+		//onstop
+		Stmt onStopNop = new JNopStmt();
+		body.getUnits().add(onStopNop);
+		Stmt onStop = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONSTOP, currentClass, entryPoints, classLocal);
+		//if (onStop != null){
+		//	createIfStmt(onStop);
+		//}
+		
+		//ondestroyview
+		Stmt onDestoryViewNop = new JNopStmt();
+		body.getUnits().add(onDestoryViewNop);
+		Stmt onDestoryView = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONDESTROYVIEW, currentClass, entryPoints, classLocal);
+		//if (onDestoryView != null){
+		//	createIfStmt(onDestoryView);
+		//}
+		
+		//ondestroy
+		Stmt onDestroyNop = new JNopStmt();
+		body.getUnits().add(onDestroyNop);
+		Stmt onDestroy = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONDESTROY, currentClass, entryPoints, classLocal);
+		//if (onDestroy != null){
+		//	createIfStmt(onDestroy);
+		//}
+		
+		//ondetach
+		Stmt onDetachNop = new JNopStmt();
+		body.getUnits().add(onDetachNop);
+		Stmt onDetach = searchAndBuildMethod(AndroidEntryPointConstants.FRAGMENT_ONDETACH, currentClass, entryPoints, classLocal);
+		//if (onDetach != null){
+		//	createIfStmt(onDetach);
+		//}
+		
+		boolean hasCallbacks = this.callbackFunctions.containsKey(currentClass.getName());
+
+		if (hasCallbacks) {
+			JNopStmt startWhileStmt = new JNopStmt();
+			JNopStmt endWhileStmt = new JNopStmt();
+			body.getUnits().add(startWhileStmt);
+			createIfStmt(endWhileStmt);
+
+			// Add the callbacks
+			addCallbackMethods(currentClass);
+
+			// Add the other entry points
+			boolean hasAdditionalMethods = false;
+			for (SootMethod currentMethod : currentClass.getMethods())
+				if (entryPoints.contains(currentMethod.toString()))
+					hasAdditionalMethods |= createPlainMethodCall(classLocal, currentMethod);
+			
+			body.getUnits().add(endWhileStmt);
+			if (hasAdditionalMethods)
+				createIfStmt(startWhileStmt);
+			
+		}
+			
+		createIfStmt(endClassStmt);
+
+	}
 	/**
 	 * Generates the lifecycle for an Android activity
 	 * @param entryPoints The list of methods to consider in this class
@@ -940,6 +1098,9 @@ public class AndroidEntryPointCreator extends BaseEntryPointCreator implements I
 			if (getComponentType(theClass) == ComponentType.ContentProvider
 					&& AndroidEntryPointConstants.getContentproviderLifecycleMethods().contains(theMethod.getSubSignature()))
 				continue;
+			if (getComponentType(theClass) == ComponentType.Fragment
+					&& AndroidEntryPointConstants.getFragmentLifecycleMethods().contains(theMethod.getSubSignature()))
+				continue;			
 
 			if (callbackClasses.containsKey(theClass))
 				callbackClasses.get(theClass).add(theMethod);
