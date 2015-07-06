@@ -132,6 +132,9 @@ public class EasyTaintWrapper extends AbstractTaintWrapper implements Cloneable 
 		this.includeList = includeList;
 	}
 
+	public Map<String, Set<String>> getExclude(){
+		return excludeList;
+	}
 	public EasyTaintWrapper(String f) throws IOException{
         this(new File(f));
     }
@@ -173,14 +176,44 @@ public class EasyTaintWrapper extends AbstractTaintWrapper implements Cloneable 
 		this(taintWrapper.classList, taintWrapper.excludeList, taintWrapper.killList, taintWrapper.includeList);
 	}
 		
+	public boolean isAggressive(Stmt stmt){
+		if (stmt.toString().contains("fromJson")){
+			logger.debug("Aggressive " + stmt.toString());
+		}
+		//logger.debug("Aggressive " + stmt.toString());
+
+		return aggressiveMode;
+	}
+	public boolean isAggressive(SootMethod method){
+		if (method.toString().contains("fromJson")){
+			logger.debug("Aggressive " + method.toString());
+		}
+		//logger.debug("Aggressive " + method.toString());
+
+		return aggressiveMode;
+	}
+	
+	
 	@Override
 	public Set<AccessPath> getTaintsForMethodInternal(Stmt stmt, AccessPath taintedPath) {
 		if (!stmt.containsInvokeExpr())
 			return Collections.emptySet();
 		
+
 		final Set<AccessPath> taints = new HashSet<AccessPath>();
 		final SootMethod method = stmt.getInvokeExpr().getMethod();
-		
+		if (
+				//method.toString().contains("fromJson") ||
+				//method.toString().contains("com.github.wil3.android.flowtests.IP") ||
+				//stmt.toString().contains("fromJson") ||
+				//stmt.toString().contains("com.github.wil3.android.flowtests.IP")
+				stmt.toString().contains("<com.github.wil3.android.flowtests.ActivityBaseAdapterTest: void onCreate(android.os.Bundle)>") ||
+
+				taintedPath.toString().contains("<com.github.wil3.android.flowtests.ActivityBaseAdapterTest: void onCreate(android.os.Bundle)>")
+
+				){
+			//logger.debug("nop");
+		}	
 		// If the callee is a phantom class or has no body, we pass on the taint
 		if (method.isPhantom() || !method.hasActiveBody())
 			taints.add(taintedPath);
@@ -210,7 +243,10 @@ public class EasyTaintWrapper extends AbstractTaintWrapper implements Cloneable 
 					isSupported = true;
 					break;
 				}
-		if (!isSupported && !aggressiveMode && !taintEqualsHashCode)
+		
+		//When we are not aggressive then this is true and we return right away
+		//when aggressive this continues...
+		if (!isSupported && !isAggressive(stmt) && !taintEqualsHashCode)
 			return taints;
 		
 		// Check for a cached wrap type
@@ -416,16 +452,25 @@ public class EasyTaintWrapper extends AbstractTaintWrapper implements Cloneable 
 	public boolean isExclusiveInternal(Stmt stmt, AccessPath taintedPath) {
 		SootMethod method = stmt.getInvokeExpr().getMethod();
 		
+		if (
+		//stmt.toString().contains("fromJson") || 
+		//taintedPath.toString().contains("fromJson") ||
+		//stmt.toString().contains("com.github.wil3.android.flowtests.IP") ||
+		taintedPath.toString().contains("$r4(com.github.wil3.android.flowtests.IP)")){
+			int nop = 0;
+		}
 		// Do we have an entry for at least one entry in the given class?
 		if (hasWrappedMethodsForClass(method.getDeclaringClass(), true, true, true))
 			return true;
 
 		// In aggressive mode, we always taint the return value if the base
 		// object is tainted.
-		if (aggressiveMode && stmt.getInvokeExpr() instanceof InstanceInvokeExpr) {
+		if (isAggressive(stmt) && stmt.getInvokeExpr() instanceof InstanceInvokeExpr) {
 			InstanceInvokeExpr iiExpr = (InstanceInvokeExpr) stmt.getInvokeExpr();			
-			if (iiExpr.getBase().equals(taintedPath.getPlainValue()))
+			if (iiExpr.getBase().equals(taintedPath.getPlainValue())){
+//				logger.debug("AGGRESSIVE " + stmt.toString() + ", " + taintedPath.getPlainValue() );
 				return true;
+			}
 		}
 		
 		final MethodWrapType wrapType = methodWrapCache.getUnchecked(method);
@@ -507,7 +552,7 @@ public class EasyTaintWrapper extends AbstractTaintWrapper implements Cloneable 
 	@Override
 	public boolean supportsCallee(SootMethod method) {
 		// Be conservative in aggressive mode
-		if (aggressiveMode)
+		if (isAggressive(method))
 			return true;
 		
 		// Check for special models
@@ -533,7 +578,7 @@ public class EasyTaintWrapper extends AbstractTaintWrapper implements Cloneable 
 			return false;
 				
 		// We need a method that can create a taint
-		if (!aggressiveMode) {
+		if (!isAggressive(callSite)) {
 			// Check for a cached wrap type
 			final MethodWrapType wrapType = methodWrapCache.getUnchecked(method);
 			if (wrapType != MethodWrapType.CreateTaint)

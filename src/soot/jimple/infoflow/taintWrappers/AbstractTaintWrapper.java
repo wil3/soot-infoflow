@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.infoflow.InfoflowManager;
 import soot.jimple.infoflow.data.Abstraction;
@@ -52,6 +53,14 @@ public abstract class AbstractTaintWrapper implements ITaintPropagationWrapper {
 
 	@Override
 	public boolean isExclusive(Stmt stmt, Abstraction taintedPath) {
+		if (stmt instanceof InvokeExpr){
+			if (((InvokeExpr)stmt).getMethodRef().declaringClass().getName().startsWith("com.github")){
+				//return false;
+			}
+		}
+		if (stmt.toString().contains("com.github.wil3.android.flowtests.CompleteListAdapter")){
+			//return false;
+		}
 		if (isExclusiveInternal(stmt, taintedPath.getAccessPath())) {
 			wrapperHits.incrementAndGet();
 			return true;
@@ -60,6 +69,7 @@ public abstract class AbstractTaintWrapper implements ITaintPropagationWrapper {
 			wrapperMisses.incrementAndGet();
 			return false;
 		}
+		
 	}
 	
 	@Override

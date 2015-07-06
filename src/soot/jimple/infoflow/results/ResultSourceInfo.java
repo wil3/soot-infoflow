@@ -12,13 +12,14 @@ import soot.tagkit.LineNumberTag;
  * 
  * @author Steven Arzt
  */
-public class ResultSourceInfo {
+public class ResultSourceInfo extends ResultInfo {
 	private final AccessPath accessPath;
 	private final Stmt source;
 	private final Object userData;
 	private final List<Stmt> path;
 	
 	public ResultSourceInfo(AccessPath source, Stmt context) {
+		super(context);
 		assert source != null;
 		
 		this.accessPath = source;
@@ -28,6 +29,7 @@ public class ResultSourceInfo {
 	}
 	
 	public ResultSourceInfo(AccessPath source, Stmt context, Object userData, List<Stmt> path) {
+		super(context);
 		assert source != null;
 
 		this.accessPath = source;

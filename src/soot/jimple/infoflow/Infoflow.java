@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -82,6 +83,8 @@ public class Infoflow extends AbstractInfoflow {
     
 	private static int accessPathLength = 5;
 	private static boolean useRecursiveAccessPaths = true;
+	
+	//Is this not reporting all results when true?
 	private static boolean pathAgnosticResults = true;
 	private static boolean oneResultPerAccessPath = false;
 	private static boolean mergeNeighbors = false;
@@ -586,10 +589,18 @@ public class Infoflow extends AbstractInfoflow {
 			logger.info("The sink {} in method {} was called with values from the following sources:",
                     entry.getKey(), iCfg.getMethodOf(entry.getKey().getSink()).getSignature() );
 			
-			SootClass declaringClass = iCfg.getMethodOf(entry.getKey().getSink()).getDeclaringClass();
+			SootMethod sm1 = iCfg.getMethodOf(entry.getKey().getSink());
+			SootClass declaringClass = sm1.getDeclaringClass();
 			entry.getKey().setDeclaringClass(declaringClass);
+			entry.getKey().setMethod(sm1);
+			
 			for (ResultSourceInfo source : entry.getValue()) {
 				logger.info("- {} in method {}",source, iCfg.getMethodOf(source.getSource()).getSignature());
+				SootMethod sm2 = iCfg.getMethodOf(source.getSource());
+				SootClass sourceDeclaringClass =  sm2.getDeclaringClass();
+				source.setDeclaringClass(sourceDeclaringClass);
+				source.setMethod(sm2);
+				
 				if (source.getPath() != null && !source.getPath().isEmpty()) {
 					logger.info("\ton Path: ");
 					for (Unit p : source.getPath()) {
@@ -603,12 +614,13 @@ public class Infoflow extends AbstractInfoflow {
 		for (ResultsAvailableHandler handler : onResultsAvailable)
 			handler.onResultsAvailable(iCfg, results);
 		
-		if (logger.isDebugEnabled())
-			PackManager.v().writeOutput();
+		//if (logger.isDebugEnabled())
+		//	PackManager.v().writeOutput();
 		
 		maxMemoryConsumption = Math.max(maxMemoryConsumption, getUsedMemory());
 	}
 	
+
 	/**
 	 * Gets the memory used by FlowDroid at the moment
 	 * @return FlowDroid's current memory consumption in bytes
@@ -783,6 +795,7 @@ public class Infoflow extends AbstractInfoflow {
 			if (ignoreFlowsInSystemPackages && SystemClassHandler.isClassInSystemPackage(className))
 				return sinkCount;
 			
+			
 			// Look for a source in the method. Also look for sinks. If we
 			// have no sink in the program, we don't need to perform any
 			// analysis
@@ -791,10 +804,10 @@ public class Infoflow extends AbstractInfoflow {
 				Stmt s = (Stmt) u;
 				if (sourcesSinks.getSourceInfo(s, iCfg) != null) {
 					forwardProblem.addInitialSeeds(u, Collections.singleton(forwardProblem.zeroValue()));
-					logger.debug("Source found: {}", u);
+					logger.info("Source found:{} {} {}",m.getDeclaringClass().getName(),m.getSubSignature(), u);
 				}
 				if (sourcesSinks.isSink(s, iCfg, null)) {
-		            logger.debug("Sink found: {}", u);
+		            logger.info("Sink found: {} {} {}",m.getDeclaringClass().getName(),m.getSubSignature(), u);
 					sinkCount++;
 				}
 			}

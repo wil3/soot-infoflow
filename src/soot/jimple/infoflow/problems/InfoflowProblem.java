@@ -48,6 +48,7 @@ import soot.jimple.InstanceFieldRef;
 import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InstanceOfExpr;
 import soot.jimple.InvokeExpr;
+import soot.jimple.InvokeStmt;
 import soot.jimple.LengthExpr;
 import soot.jimple.LookupSwitchStmt;
 import soot.jimple.ReturnStmt;
@@ -75,6 +76,7 @@ import soot.jimple.infoflow.solver.functions.SolverReturnFlowFunction;
 import soot.jimple.infoflow.source.DefaultSourceSinkManager;
 import soot.jimple.infoflow.source.ISourceSinkManager;
 import soot.jimple.infoflow.source.SourceInfo;
+import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.util.BaseSelector;
 import soot.jimple.infoflow.util.SystemClassHandler;
 
@@ -153,6 +155,10 @@ public class InfoflowProblem extends AbstractInfoflowProblem {
 						break;
 				}
 			
+			if (d1.toString().contains("fromJson") || source.toString().contains("fromJson") || iStmt.toString().contains("fromJson")){
+				//found = true;
+				//System.out.println("test");
+			}
 			// If nothing is tainted, we don't have any taints to propagate
 			if (!found)
 				return Collections.emptySet();
@@ -964,6 +970,7 @@ public class InfoflowProblem extends AbstractInfoflowProblem {
 						// method, we do not perform an own taint propagation. 
 						if(taintWrapper != null && taintWrapper.isExclusive(stmt, source)) {
 							//taint is propagated in CallToReturnFunction, so we do not need any taint here:
+							logger.debug("Returning empty: propagation will happen in CallToReturnFuntion");
 							return Collections.emptySet();
 						}
 						
@@ -1315,6 +1322,11 @@ public class InfoflowProblem extends AbstractInfoflowProblem {
 				for (int i = 0; i < invExpr.getArgCount(); i++)
 					callArgs[i] = invExpr.getArg(i);
 				
+				if (
+						iCallStmt.toString().contains("$r6(com.github.wil3.android.flowtests.IP)")
+						){
+					//logger.debug("nop");
+				}
 				final SourceInfo sourceInfo = sourceSinkManager != null
 						? sourceSinkManager.getSourceInfo(iCallStmt, interproceduralCFG()) : null;
 				final boolean isSink = (sourceSinkManager != null)
@@ -1333,8 +1345,19 @@ public class InfoflowProblem extends AbstractInfoflowProblem {
 					}
 					
 					private Set<Abstraction> computeTargetsInternal(Abstraction d1, Abstraction source) {
+						if (iCallStmt.toString().contains("fromJson")){
+							//System.out.println("nop");
+						}
 						if (stopAfterFirstFlow && !results.isEmpty())
 							return Collections.emptySet();
+///Try to exlude						
+						if (call instanceof InvokeStmt){
+							String n = ((InvokeStmt)call).getInvokeExpr().getMethodRef().declaringClass().getName();
+							if (((EasyTaintWrapper)taintWrapper).getExclude().containsKey(n)){
+								return Collections.emptySet();
+	
+							}
+						}
 						
 						// Notify the handler if we have one
 						if (taintPropagationHandlers != null)
@@ -1390,6 +1413,7 @@ public class InfoflowProblem extends AbstractInfoflowProblem {
 						else
 							newSource = source;
 						
+					
 						// Compute the taint wrapper taints
 						boolean passOn = true;
 						Collection<Abstraction> wrapperTaints = computeWrapperTaints(d1, iCallStmt, newSource);
@@ -1438,6 +1462,8 @@ public class InfoflowProblem extends AbstractInfoflowProblem {
 							// if the base object which executes the method is tainted the sink is reached, too.
 							if (invExpr instanceof InstanceInvokeExpr) {
 								InstanceInvokeExpr vie = (InstanceInvokeExpr) iCallStmt.getInvokeExpr();
+								logger.debug("active? {} alias? {}", newSource.isAbstractionActive()
+										, aliasing.mayAlias(vie.getBase(), newSource.getAccessPath().getPlainValue()));
 								if (newSource.isAbstractionActive()
 										&& aliasing.mayAlias(vie.getBase(), newSource.getAccessPath().getPlainValue()))
 									addResult(new AbstractionAtSink(newSource, iCallStmt));

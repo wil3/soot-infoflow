@@ -16,6 +16,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import soot.NullType;
 import soot.SootMethod;
 import soot.Type;
@@ -39,6 +42,8 @@ import com.google.common.collect.Sets;
  */
 public class Abstraction implements Cloneable, FastSolverLinkedNode<Abstraction, Unit> {
 	
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
 	private static boolean flowSensitiveAliasing = true;
 	
 	/**
@@ -278,6 +283,7 @@ public class Abstraction implements Cloneable, FastSolverLinkedNode<Abstraction,
 	}
 	
 	public AccessPath getAccessPath(){
+		//logger.info("{}",accessPath);
 		return accessPath;
 	}
 	

@@ -10,17 +10,14 @@ import soot.tagkit.LineNumberTag;
  * Class for modeling information flowing into a specific source
  * @author Steven Arzt
  */
-public class ResultSinkInfo {
+public class ResultSinkInfo extends ResultInfo {
 	private final AccessPath accessPath;
 	private final Stmt sink;
 	
-	/**
-	 * The class the method is called in
-	 */
-	private SootClass declaringClass;
-	public ResultSinkInfo(AccessPath sink, Stmt context) {
-		assert sink != null;
 
+	public ResultSinkInfo(AccessPath sink, Stmt context) {
+		super(context);
+		assert sink != null;
 		this.accessPath = sink;
 		this.sink = context;
 	}
@@ -28,14 +25,7 @@ public class ResultSinkInfo {
 	public AccessPath getAccessPath() {
 		return this.accessPath;
 	}
-	
-	public SootClass getDeclaringClass(){
-		return declaringClass;
-	}
-	public void setDeclaringClass(SootClass sootClass){
-		this.declaringClass = sootClass;
-	}
-	
+
 	public Stmt getSink() {
 		return this.sink;
 	}

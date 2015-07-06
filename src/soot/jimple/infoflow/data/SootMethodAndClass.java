@@ -29,10 +29,11 @@ public class SootMethodAndClass {
 	 */
 	private int lineNumber;
 	
+	private boolean isField = false;
 	private final String methodName;
 	private final String className;
 	private final String returnType;
-	private final List<String> parameters;
+	private List<String> parameters = new ArrayList<String>();
 	private int hashCode = 0;
 	
 	public SootMethodAndClass
@@ -81,6 +82,16 @@ public class SootMethodAndClass {
 	}
 	
 	public String getSubSignature() {
+		if (isField){
+			return getFieldSubSignature();
+		} else {
+			return getMethodSubSignature();
+		}
+	}
+	private String getFieldSubSignature(){
+		return this.className + ": " + this.returnType + " " + this.methodName;
+	}
+	private String getMethodSubSignature(){
 		String s = (this.returnType.length() == 0 ? "" : this.returnType + " ") + this.methodName + "(";
 		for (int i = 0; i < this.parameters.size(); i++) {
 			if (i > 0)
@@ -92,6 +103,19 @@ public class SootMethodAndClass {
 	}
 
 	public String getSignature() {
+		if (isField){
+			return getFieldSignature();
+		} else {
+			return getMethodSignature();
+		}
+	}
+	private String getFieldSignature(){
+		String inClass = (declaredClass == null) ? "" : declaredClass + ":" + lineNumber + " ";
+		String s = inClass + "<" + this.className + ": " + this.returnType + " " + this.methodName + ">";
+		return s;
+	}
+	
+	private String getMethodSignature(){
 		String inClass = (declaredClass == null) ? "" : declaredClass + ":" + lineNumber + " ";
 		String s = inClass + "<" + this.className + ": " + (this.returnType.length() == 0 ? "" : this.returnType + " ")
 				+ this.methodName + "(";
@@ -126,7 +150,8 @@ public class SootMethodAndClass {
 		if (this.hashCode == 0)
 			this.hashCode = this.methodName.hashCode() + this.className.hashCode() * 5;
 		// The parameter list is available from the outside, so we can't cache it
-		return this.hashCode + this.parameters.hashCode() * 7;
+		return (this.parameters != null) ? this.hashCode + this.parameters.hashCode() * 7 : this.hashCode;
+	
 	}
 	
 	@Override
@@ -163,6 +188,14 @@ public class SootMethodAndClass {
 
 	public void setLineNumber(int lineNumber) {
 		this.lineNumber = lineNumber;
+	}
+
+	public boolean isField() {
+		return isField;
+	}
+
+	public void setField(boolean isField) {
+		this.isField = isField;
 	}
 
 }
